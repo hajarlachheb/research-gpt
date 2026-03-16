@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ResearchGPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0b10;--bg2:#0f1018;--surface:#151620;--surface2:#1c1d2e;--surface3:#252640;
+  --border:#2a2b3d;--border2:#363852;
+  --text:#e8e8ed;--text2:#b0b3c6;--text3:#7b7f96;
+  --primary:#7c6cf0;--primary2:#6555d4;--primary-glow:rgba(124,108,240,.15);
+  --accent:#38bdf8;--accent2:#0ea5e9;
+  --green:#34d399;--yellow:#fbbf24;--red:#f87171;--orange:#fb923c;
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
+  --shadow:0 8px 32px rgba(0,0,0,.4);
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;overflow:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.app{display:flex;height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
+.sidebar-brand{padding:20px 18px;border-bottom:1px solid var(--border)}
+.sidebar-brand h1{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-brand p{font-size:11px;color:var(--text3);margin-top:2px}
+.sidebar-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);border:none;background:none;color:var(--text3);font:500 13px/1 'Inter',sans-serif;cursor:pointer;transition:.15s;text-align:left;width:100%}
+.nav-btn:hover{background:var(--surface2);color:var(--text2)}
+.nav-btn.active{background:var(--primary);color:#fff}
+.nav-btn svg{width:17px;height:17px;flex-shrink:0}
+.nav-sep{height:1px;background:var(--border);margin:8px 12px}
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}.dot.on{background:var(--green)}.dot.off{background:var(--red)}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.page{display:none;flex:1;overflow-y:auto}.page.active{display:flex;flex-direction:column}
+
+/* ── Shared ── */
+.container{max-width:900px;width:100%;margin:0 auto;padding:32px 40px}
+.container-wide{max-width:1100px;width:100%;margin:0 auto;padding:32px 40px}
+.section-title{font-size:22px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:var(--primary-glow);color:var(--primary)}
+.btn{padding:9px 18px;border-radius:var(--radius-sm);border:none;font:500 13px 'Inter',sans-serif;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary2)}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--text2)}.btn-ghost:hover{border-color:var(--primary);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .15s}
+.card:hover{border-color:var(--border2)}
+.input{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font:14px 'Inter',sans-serif;outline:none;transition:border .2s}
+.input:focus{border-color:var(--primary)}
+.input::placeholder{color:var(--text3)}
+.chip{padding:6px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text3);font:13px 'Inter',sans-serif;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--primary);color:var(--text)}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.fade-up{animation:fadeUp .35s ease}
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:42px;margin-bottom:10px}
+
+/* ── LANDING PAGE ── */
+#page-landing{background:radial-gradient(ellipse at 50% 0%,rgba(124,108,240,.08) 0%,transparent 60%)}
+.landing-hero{text-align:center;padding:80px 40px 40px;max-width:760px;margin:0 auto}
+.landing-hero h2{font-size:40px;font-weight:800;line-height:1.15;margin-bottom:12px}
+.landing-hero h2 span{background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.landing-hero p{color:var(--text2);font-size:16px;margin-bottom:32px}
+.landing-search{position:relative;max-width:640px;margin:0 auto 20px}
+.landing-search input{width:100%;padding:16px 52px 16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font:15px 'Inter',sans-serif;color:var(--text);outline:none;transition:border .2s}
+.landing-search input:focus{border-color:var(--primary)}
+.landing-search input::placeholder{color:var(--text3)}
+.landing-search .go-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:8px;border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.landing-search .go-btn:hover{background:var(--primary2)}
+.landing-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+.landing-sections{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:760px;margin:0 auto;padding:0 40px 40px}
+.landing-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;cursor:pointer;transition:.2s}
+.landing-card:hover{border-color:var(--primary);transform:translateY(-2px)}
+.landing-card .lc-icon{font-size:28px;margin-bottom:8px}
+.landing-card h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.landing-card p{font-size:12px;color:var(--text3)}
+
+/* ── ASK PAGE ── */
+.ask-layout{display:flex;flex:1;overflow:hidden}
+.ask-filters{width:220px;border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;overflow-y:auto;background:var(--bg2)}
+.ask-filters h3{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.filter-group label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px}
+.filter-group .input{font-size:13px;padding:8px 10px}
+.ask-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.ask-messages{flex:1;overflow-y:auto;padding:24px 32px}
+.ask-welcome{text-align:center;padding:60px 20px}
+.ask-welcome h3{font-size:24px;font-weight:700;margin-bottom:8px}
+.ask-welcome p{color:var(--text3);margin-bottom:24px}
+.ask-welcome .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.msg{margin-bottom:20px;animation:fadeUp .3s ease}
+.msg-user{display:flex;justify-content:flex-end}
+.msg-user .msg-bubble{background:var(--primary);color:#fff;padding:10px 16px;border-radius:var(--radius) var(--radius) 4px var(--radius);max-width:70%;font-size:14px}
+.msg-ai{display:flex;flex-direction:column;gap:12px}
+.msg-ai .answer-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;max-width:100%}
+.answer-meta{display:flex;gap:14px;font-size:11px;color:var(--text3);margin-bottom:10px;flex-wrap:wrap}
+.answer-meta span{display:flex;align-items:center;gap:4px}
+.answer-body{font-size:14px;line-height:1.8;white-space:pre-wrap}
+.sources-list{margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.sources-list h5{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.src-item{display:flex;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--bg);margin-bottom:5px;font-size:13px;cursor:pointer;transition:background .15s}
+.src-item:hover{background:var(--surface2)}
+.src-badge{background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:2px;flex-shrink:0}
+.src-title{font-weight:600}.src-detail{font-size:11px;color:var(--text3)}
+.ask-input-bar{padding:16px 32px;border-top:1px solid var(--border);background:var(--bg2)}
+.ask-input-wrap{display:flex;gap:10px;max-width:800px;margin:0 auto}
+.ask-input-wrap textarea{flex:1;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font:14px 'Inter',sans-serif;resize:none;outline:none;min-height:44px;max-height:120px;line-height:1.5;transition:border .2s}
+.ask-input-wrap textarea:focus{border-color:var(--primary)}
+.ask-input-wrap textarea::placeholder{color:var(--text3)}
+.send-btn{width:44px;height:44px;border-radius:var(--radius-sm);border:none;background:var(--primary);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.send-btn:hover{background:var(--primary2)}.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.send-btn svg{width:18px;height:18px}
+
+/* ── PAPER EXPLORER ── */
+.explorer-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.explorer-bar .input{max-width:300px}
+.explorer-bar select{padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font:13px 'Inter',sans-serif;outline:none}
+.papers-grid{display:grid;gap:10px}
+.paper-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:.15s}
+.paper-row:hover{border-color:var(--primary);background:var(--surface2)}
+.paper-info h4{font-size:14px;font-weight:600;margin-bottom:3px}
+.paper-info p{font-size:12px;color:var(--text3)}
+.paper-stat{text-align:right;white-space:nowrap}
+.paper-stat .count{font-size:18px;font-weight:700;color:var(--accent)}
+.paper-stat .label{font-size:10px;color:var(--text3)}
+
+/* ── PAPER DETAIL MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);width:90%;max-width:740px;max-height:85vh;overflow-y:auto;padding:28px 32px;animation:fadeUp .25s ease}
+.modal-close{position:sticky;top:0;float:right;width:32px;height:32px;border-radius:8px;border:none;background:var(--surface2);color:var(--text3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:1}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.modal h2{font-size:20px;font-weight:700;margin-bottom:6px;padding-right:40px}
+.modal .meta{font-size:13px;color:var(--text3);margin-bottom:20px}
+.modal .section-block{margin-bottom:18px}
+.modal .section-block h4{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.modal .section-block p{font-size:13px;color:var(--text2);line-height:1.7}
+.modal-actions{display:flex;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── RESEARCH MODE ── */
+.research-form{display:flex;gap:10px;margin-bottom:24px}
+.research-form textarea{flex:1;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font:14px 'Inter',sans-serif;resize:none;outline:none;min-height:52px;max-height:120px}
+.research-form textarea:focus{border-color:var(--primary)}
+.research-form textarea::placeholder{color:var(--text3)}
+.research-examples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.research-result{animation:fadeUp .3s}
+
+/* ── SAVED ── */
+.saved-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.saved-tab{padding:10px 20px;border:none;background:none;border-bottom:2px solid transparent;color:var(--text3);font:500 13px 'Inter',sans-serif;cursor:pointer}
+.saved-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.saved-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--border);margin-bottom:8px;transition:.15s}
+.saved-item:hover{border-color:var(--border2)}
+.saved-item .query-text{font-size:14px;font-weight:500;cursor:pointer}
+.saved-item .query-text:hover{color:var(--primary)}
+.saved-item .timestamp{font-size:11px;color:var(--text3)}
+.remove-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:4px}
+.remove-btn:hover{color:var(--red);background:rgba(248,113,113,.1)}
+
+/* ── ADMIN ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.stat-card .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.stat-card .stat-value{font-size:26px;font-weight:700}
+.stat-card .stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.trace-table{width:100%;border-collapse:collapse}
+.trace-table th{text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border)}
+.trace-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px}
+.trace-table tr:hover td{background:var(--surface2)}
+.trace-error{color:var(--red);font-size:12px}
+.trace-ok{color:var(--green)}
+
+/* ── INGEST (in explorer) ── */
+.ingest-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px}
+.ingest-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:18px}
+.ingest-tab{padding:8px 16px;border:none;background:none;border-bottom:2px solid transparent;color:var(--text3);font:500 12px 'Inter',sans-serif;cursor:pointer}
+.ingest-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.ingest-content{display:none}.ingest-content.active{display:block}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px;font-weight:500}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:36px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:16px}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:var(--primary-glow)}
+.upload-zone .icon{font-size:32px;margin-bottom:6px}
+.upload-zone p{font-size:13px;color:var(--text3)}
+.upload-zone .file-name{color:var(--accent);font-weight:600}
+
+/* ── Toasts ── */
+.toasts{position:fixed;top:16px;right:16px;z-index:999;display:flex;flex-direction:column;gap:6px}
+.toast{padding:10px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;box-shadow:var(--shadow);animation:fadeUp .25s}
+.toast.ok{background:#065f46;color:#d1fae5}.toast.err{background:#7f1d1d;color:#fecaca}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .container,.container-wide{padding:20px 16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .landing-sections{grid-template-columns:1fr}
+  .ask-filters{display:none}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand"><h1>ResearchGPT</h1><p>AI Research Assistant</p></div>
+  <nav class="sidebar-nav">
+    <button class="nav-btn active" data-page="landing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Home</button>
+    <button class="nav-btn" data-page="ask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Search / Ask</button>
+    <button class="nav-btn" data-page="explorer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Paper Explorer</button>
+    <button class="nav-btn" data-page="research"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Research Mode</button>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" data-page="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Saved Research</button>
+    <button class="nav-btn" data-page="admin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>Admin</button>
+  </nav>
+  <div class="sidebar-footer"><span class="dot" id="sDot"></span><span id="sTxt">Connecting...</span></div>
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+<!-- PAGE: LANDING -->
+<section class="page active" id="page-landing">
+  <div class="landing-hero">
+    <h2>Ask questions across<br/>thousands of <span>research papers</span></h2>
+    <p>Get grounded answers with citations from arXiv, NeurIPS, ICML, ACL and more</p>
+    <div class="landing-search">
+      <input id="landingQ" placeholder="Ask a research question..." onkeydown="if(event.key==='Enter')goLandingSearch()"/>
+      <button class="go-btn" onclick="goLandingSearch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></button>
+    </div>
+    <div class="landing-chips">
+      <button class="chip" onclick="landingChip(this)">What are the limitations of transformers?</button>
+      <button class="chip" onclick="landingChip(this)">Compare BERT and RoBERTa</button>
+      <button class="chip" onclick="landingChip(this)">Summarize diffusion models</button>
+      <button class="chip" onclick="landingChip(this)">Recent improvements in LLM alignment</button>
+    </div>
+  </div>
+  <div class="landing-sections">
+    <div class="landing-card" onclick="nav('explorer')"><div class="lc-icon">&#128240;</div><h4>Paper Explorer</h4><p>Browse and search your research library</p></div>
+    <div class="landing-card" onclick="nav('research')"><div class="lc-icon">&#128300;</div><h4>Research Mode</h4><p>Multi-paper comparison and deep analysis</p></div>
+    <div class="landing-card" onclick="nav('admin')"><div class="lc-icon">&#128202;</div><h4>Monitoring</h4><p>Track queries, latency and pipeline health</p></div>
+  </div>
+</section>
+
+<!-- PAGE: ASK -->
+<section class="page" id="page-ask">
+  <div class="ask-layout">
+    <div class="ask-filters">
+      <h3>Search Filters</h3>
+      <div class="filter-group"><label>Year</label><input class="input" id="fYear" type="number" placeholder="e.g. 2023"/></div>
+      <div class="filter-group"><label>Author</label><input class="input" id="fAuthor" placeholder="Author name"/></div>
+      <div class="filter-group"><label>Conference</label><input class="input" id="fConf" placeholder="NeurIPS, ICML..."/></div>
+      <div class="filter-group"><label>Topic</label><input class="input" id="fTopic" placeholder="transformers..."/></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="clearFilters()">Clear Filters</button>
+    </div>
+    <div class="ask-main">
+      <div class="ask-messages" id="askMessages">
+        <div class="ask-welcome">
+          <h3>Ask anything about research</h3>
+          <p>Your AI assistant will retrieve relevant papers and generate grounded answers</p>
+          <div class="chips">
+            <button class="chip" onclick="askChip(this)">What are the limitations of the transformer architecture?</button>
+            <button class="chip" onclick="askChip(this)">Compare BERT and RoBERTa training strategies</button>
+            <button class="chip" onclick="askChip(this)">Summarize methods used for diffusion models</button>
+          </div>
+        </div>
+      </div>
+      <div class="ask-input-bar">
+        <div class="ask-input-wrap">
+          <textarea id="askInput" rows="1" placeholder="Ask a research question..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAsk()}" oninput="autoH(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendAsk()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAGE: PAPER EXPLORER -->
+<section class="page" id="page-explorer">
+  <div class="container-wide">
+    <h2 class="section-title">Paper Explorer <span class="badge" id="paperCount">0 papers</span></h2>
+    <div class="ingest-panel" id="ingestPanel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-size:15px;font-weight:600">Add Papers</h3>
+        <button class="btn btn-ghost btn-sm" onclick="toggleIngest()">&#9660;</button>
+      </div>
+      <div id="ingestBody">
+        <div class="ingest-tabs">
+          <button class="ingest-tab active" onclick="switchIngest('upload',this)">Upload PDF</button>
+          <button class="ingest-tab" onclick="switchIngest('text',this)">Paste Text</button>
+        </div>
+        <div class="ingest-content active" id="ingest-upload">
+          <div class="upload-zone" id="upZone" onclick="document.getElementById('upFile').click()">
+            <div class="icon">&#128196;</div><p id="upLabel">Click or drag a PDF</p>
+            <input type="file" id="upFile" accept=".pdf" style="display:none" onchange="onUpFile(this)"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Title *</label><input class="input" id="upTitle"/></div>
+            <div class="form-group"><label>Authors</label><input class="input" id="upAuthors" placeholder="Comma-separated"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Year</label><input class="input" id="upYear" type="number"/></div>
+            <div class="form-group"><label>Conference</label><input class="input" id="upConf"/></div>
+          </div>
+          <button class="btn btn-primary" id="upBtn" onclick="doUpload()">Upload & Ingest</button>
+        </div>
+        <div class="ingest-content" id="ingest-text">
+          <div class="form-group"><label>Paper Text *</label><textarea class="input" id="inText" rows="5" style="resize:vertical"></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Title *</label><input class="input" id="inTitle"/></div>
+            <div class="form-group"><label>Authors</label><input class="input" id="inAuthors" placeholder="Comma-separated"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Year</label><input class="input" id="inYear" type="number"/></div>
+            <div class="form-group"><label>Conference</label><input class="input" id="inConf"/></div>
+          </div>
+          <button class="btn btn-primary" id="inBtn" onclick="doIngestText()">Ingest Paper</button>
+        </div>
+      </div>
+    </div>
+    <div class="explorer-bar">
+      <input class="input" id="explorerSearch" placeholder="Search papers..." oninput="filterPapers()"/>
+    </div>
+    <div class="papers-grid" id="papersGrid"></div>
+  </div>
+</section>
+
+<!-- PAGE: RESEARCH MODE -->
+<section class="page" id="page-research">
+  <div class="container">
+    <h2 class="section-title">&#128300; Research Mode</h2>
+    <p style="color:var(--text3);margin-bottom:20px;font-size:14px">Ask complex multi-paper questions — compare, contrast, and analyze across your library.</p>
+    <div class="research-form">
+      <textarea id="researchQ" rows="2" placeholder="e.g. Compare BERT and RoBERTa training strategies" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();doResearch()}"></textarea>
+      <button class="btn btn-primary" id="researchBtn" onclick="doResearch()" style="align-self:flex-end;height:52px">Analyze</button>
+    </div>
+    <div class="research-examples">
+      <button class="chip" onclick="researchChip(this)">Compare BERT and RoBERTa training strategies</button>
+      <button class="chip" onclick="researchChip(this)">Summarize attention mechanism variants</button>
+      <button class="chip" onclick="researchChip(this)">What methods are used in diffusion models?</button>
+    </div>
+    <div id="researchResult"></div>
+  </div>
+</section>
+
+<!-- PAGE: SAVED -->
+<section class="page" id="page-saved">
+  <div class="container">
+    <h2 class="section-title">&#128278; Saved Research</h2>
+    <div class="saved-tabs">
+      <button class="saved-tab active" onclick="switchSaved('queries',this)">Saved Queries</button>
+      <button class="saved-tab" onclick="switchSaved('papers',this)">Saved Papers</button>
+    </div>
+    <div id="savedQueries"></div>
+    <div id="savedPapers" style="display:none"></div>
+  </div>
+</section>
+
+<!-- PAGE: ADMIN -->
+<section class="page" id="page-admin">
+  <div class="container-wide">
+    <h2 class="section-title">&#128202; Admin Dashboard</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:12px">Recent Traces</h3>
+    <div style="overflow-x:auto">
+      <table class="trace-table" id="traceTable"><thead><tr><th>Query</th><th>Latency</th><th>Retrieved</th><th>Reranked</th><th>Tokens</th><th>Status</th><th>Time</th></tr></thead><tbody id="traceBody"></tbody></table>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- ── PAPER DETAIL MODAL ── -->
+<div class="modal-overlay" id="paperModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+const API = window.location.port === '3500' ? 'http://localhost:8000' : '';
+let allPapers=[];
+
+/* ── NAV ── */
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.page)));
+function nav(p){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===p));
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-'+p));
+  if(p==='explorer')loadPapers();
+  if(p==='admin')loadAdmin();
+  if(p==='saved')renderSaved();
+}
+
+/* ── HEALTH ── */
+async function checkHealth(){
+  try{
+    const r=await fetch(API+'/health');const d=await r.json();
+    document.getElementById('sDot').className='dot '+(d.status==='healthy'?'on':'off');
+    const c=d.components?.vector_store?.count??0;
+    document.getElementById('sTxt').textContent=d.status==='healthy'?`Online \u00b7 ${c} chunks`:'Unhealthy';
+  }catch{document.getElementById('sDot').className='dot off';document.getElementById('sTxt').textContent='Offline'}
+}
+checkHealth();setInterval(checkHealth,30000);
+
+/* ── LANDING ── */
+function goLandingSearch(){const q=document.getElementById('landingQ').value.trim();if(!q)return;nav('ask');document.getElementById('askInput').value=q;sendAsk()}
+function landingChip(el){document.getElementById('landingQ').value=el.textContent;goLandingSearch()}
+
+/* ── ASK ── */
+function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+function askChip(el){document.getElementById('askInput').value=el.textContent;sendAsk()}
+function clearFilters(){['fYear','fAuthor','fConf','fTopic'].forEach(id=>document.getElementById(id).value='')}
+
+async function sendAsk(){
+  const q=document.getElementById('askInput').value.trim();if(!q)return;
+  const msgs=document.getElementById('askMessages');
+  const welcome=msgs.querySelector('.ask-welcome');if(welcome)welcome.remove();
+
+  msgs.innerHTML+=`<div class="msg msg-user"><div class="msg-bubble">${esc(q)}</div></div>`;
+  document.getElementById('askInput').value='';autoH(document.getElementById('askInput'));
+
+  const loadId='load_'+Date.now();
+  msgs.innerHTML+=`<div class="msg msg-ai" id="${loadId}"><div style="display:flex;align-items:center;gap:10px;color:var(--text3);padding:8px"><div class="spinner"></div>Searching papers...</div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+
+  const btn=document.getElementById('sendBtn');btn.disabled=true;
+  const filters={};
+  const y=document.getElementById('fYear').value;if(y)filters.year=+y;
+  const a=document.getElementById('fAuthor').value.trim();if(a)filters.author=a;
+  const c=document.getElementById('fConf').value.trim();if(c)filters.conference=c;
+
+  try{
+    const body={question:q,stream:false};if(Object.keys(filters).length)body.filters=filters;
+    const res=await fetch(API+'/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok){const e=await res.json();throw new Error(e.detail||'Failed')}
+    const data=await res.json();
+    document.getElementById(loadId).innerHTML=renderAskAnswer(data);
+    saveQuery(q);
+  }catch(err){
+    document.getElementById(loadId).innerHTML=`<div class="answer-card"><div class="answer-body" style="color:var(--red)">Error: ${esc(err.message)}</div></div>`;
+  }finally{btn.disabled=false;msgs.scrollTop=msgs.scrollHeight}
+}
+
+function renderAskAnswer(d){
+  let h=`<div class="answer-card fade-up"><div class="answer-meta">`;
+  if(d.latency_ms)h+=`<span>&#9201; ${d.latency_ms.toFixed(0)}ms</span>`;
+  if(d.token_usage?.total_tokens)h+=`<span>&#128172; ${d.token_usage.total_tokens} tokens</span>`;
+  if(d.rewritten_query&&d.rewritten_query!==d.query)h+=`<span>&#128269; ${esc(d.rewritten_query.slice(0,60))}</span>`;
+  h+=`</div><div class="answer-body">${esc(d.answer)}</div>`;
+  if(d.sources?.length){
+    h+=`<div class="sources-list"><h5>Sources (${d.sources.length})</h5>`;
+    d.sources.forEach((s,i)=>{
+      h+=`<div class="src-item" onclick="openPaperByTitle('${esc(s.paper)}')"><span class="src-badge">${i+1}</span><div><div class="src-title">${esc(s.paper)}${s.year?' ('+s.year+')':''}</div><div class="src-detail">${s.section?'Section: '+esc(s.section):''}${s.authors?.length?' &middot; '+s.authors.map(esc).join(', '):''}</div></div></div>`;
+    });
+    h+=`</div>`;
+  }
+  return h+`</div>`;
+}
+
+/* ── PAPER EXPLORER ── */
+async function loadPapers(){
+  const grid=document.getElementById('papersGrid');
+  grid.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--text3);padding:20px"><div class="spinner"></div>Loading...</div>`;
+  try{
+    const res=await fetch(API+'/papers');allPapers=await res.json();
+    document.getElementById('paperCount').textContent=allPapers.length+' papers';
+    renderPapers(allPapers);
+  }catch{grid.innerHTML=`<div class="empty"><p style="color:var(--red)">Failed to load papers</p></div>`}
+}
+
+function renderPapers(papers){
+  const grid=document.getElementById('papersGrid');
+  if(!papers.length){grid.innerHTML=`<div class="empty"><div class="empty-icon">&#128218;</div><p>No papers yet. Upload or paste a paper above to get started.</p></div>`;return}
+  grid.innerHTML=papers.map(p=>`<div class="paper-row" onclick="openPaperByTitle('${esc(p.title)}')">
+    <div class="paper-info"><h4>${esc(p.title)}</h4><p>${p.authors?.length?p.authors.map(esc).join(', '):'Unknown'}${p.year?' &middot; '+p.year:''}${p.conference?' &middot; '+esc(p.conference):''}</p></div>
+    <div class="paper-stat"><div class="count">${p.chunk_count}</div><div class="label">chunks</div></div>
+  </div>`).join('');
+}
+
+function filterPapers(){
+  const q=document.getElementById('explorerSearch').value.toLowerCase();
+  const filtered=allPapers.filter(p=>p.title.toLowerCase().includes(q)||p.authors?.some(a=>a.toLowerCase().includes(q)));
+  renderPapers(filtered);
+}
+
+/* ── PAPER DETAIL ── */
+async function openPaperByTitle(title){
+  const modal=document.getElementById('paperModal');
+  const content=document.getElementById('modalContent');
+  modal.classList.add('open');
+  content.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--text3);padding:20px"><div class="spinner"></div>Loading paper...</div>`;
+  try{
+    const res=await fetch(API+'/papers/'+encodeURIComponent(title));
+    if(!res.ok)throw new Error('Not found');
+    const p=await res.json();
+    let h=`<h2>${esc(p.title)}</h2><div class="meta">${p.authors?.length?p.authors.map(esc).join(', '):''}${p.year?' &middot; '+p.year:''}${p.conference?' &middot; '+esc(p.conference):''}${p.source_url?' &middot; <a href="'+esc(p.source_url)+'" target="_blank">Source</a>':''} &middot; ${p.chunk_count} chunks</div>`;
+    for(const[sec,texts]of Object.entries(p.sections||{})){
+      h+=`<div class="section-block"><h4>${esc(sec)}</h4><p>${texts.map(t=>esc(t)).join('</p><p>')}</p></div>`;
+    }
+    h+=`<div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="closeModal();nav('ask');document.getElementById('askInput').value='Tell me about ${esc(p.title)}';sendAsk()">Ask about this paper</button>
+      <button class="btn btn-ghost btn-sm" onclick="savePaper('${esc(p.title)}',${p.year||0})">Save paper</button>
+    </div>`;
+    content.innerHTML=h;
+  }catch(e){content.innerHTML=`<p style="color:var(--red)">Could not load paper details.</p>`}
+}
+
+function closeModal(){document.getElementById('paperModal').classList.remove('open')}
+document.getElementById('paperModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+/* ── INGEST ── */
+function toggleIngest(){const b=document.getElementById('ingestBody');b.style.display=b.style.display==='none'?'block':'none'}
+function switchIngest(tab,btn){
+  btn.parentElement.querySelectorAll('.ingest-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('.ingest-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('ingest-'+tab).classList.add('active');
+}
+
+const uz=document.getElementById('upZone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('dragover')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('dragover'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.name.endsWith('.pdf')){document.getElementById('upFile').files=e.dataTransfer.files;document.getElementById('upLabel').innerHTML=`<span class="file-name">${esc(f.name)}</span>`}});
+function onUpFile(inp){if(inp.files[0])document.getElementById('upLabel').innerHTML=`<span class="file-name">${esc(inp.files[0].name)}</span>`}
+
+async function doUpload(){
+  const file=document.getElementById('upFile').files[0];const title=document.getElementById('upTitle').value.trim();
+  if(!file)return toast('Select a PDF','err');if(!title)return toast('Title required','err');
+  const btn=document.getElementById('upBtn');btn.disabled=true;btn.textContent='Uploading...';
+  const fd=new FormData();fd.append('file',file);fd.append('title',title);
+  fd.append('authors',document.getElementById('upAuthors').value);
+  const y=document.getElementById('upYear').value;if(y)fd.append('year',y);
+  const c=document.getElementById('upConf').value;if(c)fd.append('conference',c);
+  try{const r=await fetch(API+'/ingest/upload',{method:'POST',body:fd});if(!r.ok){const e=await r.json();throw new Error(e.detail)}const d=await r.json();toast(`"${d.paper_title}" — ${d.chunks_created} chunks`,'ok');loadPapers();checkHealth()}catch(e){toast(e.message,'err')}finally{btn.disabled=false;btn.textContent='Upload & Ingest'}
+}
+
+async function doIngestText(){
+  const text=document.getElementById('inText').value.trim();const title=document.getElementById('inTitle').value.trim();
+  if(!text)return toast('Paste paper text','err');if(!title)return toast('Title required','err');
+  const btn=document.getElementById('inBtn');btn.disabled=true;btn.textContent='Ingesting...';
+  const authors=document.getElementById('inAuthors').value.split(',').map(a=>a.trim()).filter(Boolean);
+  const year=parseInt(document.getElementById('inYear').value)||null;
+  const conference=document.getElementById('inConf').value.trim()||null;
+  try{const r=await fetch(API+'/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,metadata:{title,authors,year,conference}})});if(!r.ok){const e=await r.json();throw new Error(e.detail)}const d=await r.json();toast(`"${d.paper_title}" — ${d.chunks_created} chunks`,'ok');loadPapers();checkHealth()}catch(e){toast(e.message,'err')}finally{btn.disabled=false;btn.textContent='Ingest Paper'}
+}
+
+/* ── RESEARCH MODE ── */
+function researchChip(el){document.getElementById('researchQ').value=el.textContent;doResearch()}
+async function doResearch(){
+  const q=document.getElementById('researchQ').value.trim();if(!q)return;
+  const out=document.getElementById('researchResult');const btn=document.getElementById('researchBtn');
+  btn.disabled=true;out.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--text3);padding:16px"><div class="spinner"></div>Analyzing across papers...</div>`;
+  try{
+    const r=await fetch(API+'/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});
+    if(!r.ok){const e=await r.json();throw new Error(e.detail)}
+    const d=await r.json();
+    out.innerHTML=`<div class="research-result">${renderAskAnswer(d)}</div>`;
+    saveQuery(q);
+  }catch(e){out.innerHTML=`<div class="card"><div style="color:var(--red)">Error: ${esc(e.message)}</div></div>`}finally{btn.disabled=false}
+}
+
+/* ── SAVED ── */
+function getStore(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch{return[]}}
+function setStore(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function saveQuery(q){const arr=getStore('rg_queries');if(!arr.find(x=>x.q===q)){arr.unshift({q,ts:new Date().toISOString()});setStore('rg_queries',arr.slice(0,50))}}
+function savePaper(title,year){const arr=getStore('rg_papers');if(!arr.find(x=>x.title===title)){arr.unshift({title,year,ts:new Date().toISOString()});setStore('rg_papers',arr);toast('Paper saved','ok')}}
+
+function switchSaved(tab,btn){
+  btn.parentElement.querySelectorAll('.saved-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+  document.getElementById('savedQueries').style.display=tab==='queries'?'block':'none';
+  document.getElementById('savedPapers').style.display=tab==='papers'?'block':'none';
+  renderSaved();
+}
+
+function renderSaved(){
+  const queries=getStore('rg_queries');const papers=getStore('rg_papers');
+  const qEl=document.getElementById('savedQueries');
+  if(!queries.length)qEl.innerHTML=`<div class="empty"><div class="empty-icon">&#128278;</div><p>No saved queries yet. They're saved automatically when you ask.</p></div>`;
+  else qEl.innerHTML=queries.map((x,i)=>`<div class="saved-item"><div><div class="query-text" onclick="nav('ask');document.getElementById('askInput').value='${esc(x.q)}';sendAsk()">${esc(x.q)}</div><div class="timestamp">${new Date(x.ts).toLocaleDateString()}</div></div><button class="remove-btn" onclick="removeSaved('rg_queries',${i})">&times;</button></div>`).join('');
+
+  const pEl=document.getElementById('savedPapers');
+  if(!papers.length)pEl.innerHTML=`<div class="empty"><div class="empty-icon">&#128218;</div><p>No saved papers yet. Save them from the Paper Explorer.</p></div>`;
+  else pEl.innerHTML=papers.map((x,i)=>`<div class="saved-item"><div><div class="query-text" onclick="openPaperByTitle('${esc(x.title)}')">${esc(x.title)}${x.year?' ('+x.year+')':''}</div><div class="timestamp">${new Date(x.ts).toLocaleDateString()}</div></div><button class="remove-btn" onclick="removeSaved('rg_papers',${i})">&times;</button></div>`).join('');
+}
+
+function removeSaved(key,idx){const arr=getStore(key);arr.splice(idx,1);setStore(key,arr);renderSaved()}
+
+/* ── ADMIN ── */
+async function loadAdmin(){
+  const sg=document.getElementById('statsGrid');const tb=document.getElementById('traceBody');
+  sg.innerHTML=`<div style="grid-column:1/-1;display:flex;align-items:center;gap:10px;color:var(--text3)"><div class="spinner"></div>Loading stats...</div>`;
+  try{
+    const [statsRes,tracesRes]=await Promise.all([fetch(API+'/stats'),fetch(API+'/traces?limit=50')]);
+    const stats=await statsRes.json();const traces=await tracesRes.json();
+
+    sg.innerHTML=`
+      <div class="stat-card"><div class="stat-label">Total Queries</div><div class="stat-value">${stats.total_queries}</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Latency</div><div class="stat-value" style="color:var(--accent)">${stats.avg_latency_ms}ms</div></div>
+      <div class="stat-card"><div class="stat-label">Total Tokens</div><div class="stat-value">${stats.total_tokens.toLocaleString()}</div><div class="stat-sub">Avg ${stats.avg_tokens}/query</div></div>
+      <div class="stat-card"><div class="stat-label">Error Rate</div><div class="stat-value" style="color:${stats.error_rate>10?'var(--red)':'var(--green)'}">${stats.error_rate}%</div><div class="stat-sub">${stats.error_count} errors</div></div>
+    `;
+
+    tb.innerHTML=traces.reverse().map(t=>`<tr>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.query?.slice(0,60)||'—')}</td>
+      <td>${t.total_latency_ms?.toFixed(0)||0}ms</td>
+      <td>${t.retrieved_chunks||0}</td>
+      <td>${t.reranked_chunks||0}</td>
+      <td>${t.token_usage?.total_tokens||0}</td>
+      <td>${t.error?`<span class="trace-error">${esc(t.error.slice(0,30))}</span>`:'<span class="trace-ok">&#10003;</span>'}</td>
+      <td style="font-size:11px;color:var(--text3)">${t.timestamp?new Date(t.timestamp).toLocaleTimeString():''}</td>
+    </tr>`).join('');
+    if(!traces.length)tb.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">No traces yet</td></tr>`;
+  }catch{sg.innerHTML=`<div style="grid-column:1/-1;color:var(--red)">Failed to load stats</div>`}
+}
+
+/* ── UTIL ── */
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function toast(m,t='ok'){const c=document.getElementById('toasts');const el=document.createElement('div');el.className='toast '+t;el.textContent=m;c.appendChild(el);setTimeout(()=>el.remove(),4000)}
+</script>
+</body>
+</html>
