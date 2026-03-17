@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import pytest
 
-os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_API_KEY", "test-key-not-real")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "./data/test_chroma_mon")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 

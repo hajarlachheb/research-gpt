@@ -6,7 +6,9 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 
-os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_BASE_URL", "http://localhost:11434/v1")
+os.environ.setdefault("LLM_MODEL", "llama3.2")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "./data/test_chroma_llm")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 
@@ -34,7 +36,7 @@ class TestLLMGenerator:
         with patch.object(LLMGenerator, "__init__", lambda self, pm=None: None):
             gen = LLMGenerator()
             gen.settings = MagicMock()
-            gen.settings.openai_model = "gpt-3.5-turbo"
+            gen.settings.llm_model = "llama3.2"
             gen.settings.max_response_tokens = 1024
             gen._prompt_manager = mock_prompt_manager
             gen._client = MagicMock()
@@ -54,7 +56,7 @@ class TestLLMGenerator:
         with patch.object(LLMGenerator, "__init__", lambda self, pm=None: None):
             gen = LLMGenerator()
             gen.settings = MagicMock()
-            gen.settings.openai_model = "gpt-3.5-turbo"
+            gen.settings.llm_model = "llama3.2"
             gen.settings.max_response_tokens = 1024
             gen._prompt_manager = mock_prompt_manager
             gen._client = MagicMock()
@@ -74,7 +76,7 @@ class TestQueryRewriter:
         with patch.object(QueryRewriter, "__init__", lambda self, pm=None: None):
             rewriter = QueryRewriter()
             rewriter.settings = MagicMock()
-            rewriter.settings.openai_model = "gpt-3.5-turbo"
+            rewriter.settings.llm_model = "llama3.2"
             rewriter._prompt_manager = mock_prompt_manager
             rewriter._client = MagicMock()
             rewriter._client.chat.completions.create = AsyncMock(return_value=mock_response)
@@ -91,7 +93,7 @@ class TestQueryRewriter:
         with patch.object(QueryRewriter, "__init__", lambda self, pm=None: None):
             rewriter = QueryRewriter()
             rewriter.settings = MagicMock()
-            rewriter.settings.openai_model = "gpt-3.5-turbo"
+            rewriter.settings.llm_model = "llama3.2"
             rewriter._prompt_manager = mock_prompt_manager
             rewriter._client = MagicMock()
             rewriter._client.chat.completions.create = AsyncMock(return_value=mock_response)
@@ -104,7 +106,7 @@ class TestQueryRewriter:
         with patch.object(QueryRewriter, "__init__", lambda self, pm=None: None):
             rewriter = QueryRewriter()
             rewriter.settings = MagicMock()
-            rewriter.settings.openai_model = "gpt-3.5-turbo"
+            rewriter.settings.llm_model = "llama3.2"
             rewriter._prompt_manager = mock_prompt_manager
             rewriter._client = MagicMock()
             rewriter._client.chat.completions.create = AsyncMock(side_effect=Exception("API error"))

@@ -8,7 +8,7 @@ import shutil
 import pytest
 from pathlib import Path
 
-os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_API_KEY", "test-key-not-real")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "./data/test_chroma_pm")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 

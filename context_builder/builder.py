@@ -15,7 +15,7 @@ class ContextBuilder:
     def __init__(self):
         self.settings = get_settings()
         try:
-            self._enc = tiktoken.encoding_for_model(self.settings.openai_model)
+            self._enc = tiktoken.encoding_for_model(self.settings.llm_model)
         except Exception:
             self._enc = tiktoken.get_encoding("cl100k_base")
 

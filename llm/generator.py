@@ -16,7 +16,10 @@ logger = get_logger(__name__)
 class LLMGenerator:
     def __init__(self, prompt_manager: PromptManager | None = None):
         self.settings = get_settings()
-        self._client = AsyncOpenAI(api_key=self.settings.openai_api_key)
+        self._client = AsyncOpenAI(
+            base_url=self.settings.llm_base_url,
+            api_key=self.settings.llm_api_key,
+        )
         self._prompt_manager = prompt_manager or PromptManager()
 
     async def generate(self, question: str, context: str) -> tuple[str, dict]:
@@ -27,7 +30,7 @@ class LLMGenerator:
         logger.info("llm_generate_start", question_len=len(question), context_len=len(context))
 
         response = await self._client.chat.completions.create(
-            model=self.settings.openai_model,
+            model=self.settings.llm_model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
@@ -54,7 +57,7 @@ class LLMGenerator:
         logger.info("llm_stream_start", question_len=len(question))
 
         stream = await self._client.chat.completions.create(
-            model=self.settings.openai_model,
+            model=self.settings.llm_model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},

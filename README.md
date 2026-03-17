@@ -48,7 +48,7 @@ A production-ready Retrieval-Augmented Generation (RAG) system that enables user
                                  │ formatted context + citations
                                  ▼
                         ┌────────────────────┐
-                        │ LLM Generator      │ (OpenAI / streaming)
+                        │ LLM Generator      │ (Llama via Ollama / streaming)
                         │ (llm/)             │
                         └────────┬───────────┘
                                  │
@@ -103,14 +103,24 @@ research-gpt/
 
 ## Quick Start
 
-### 1. Environment Setup
+### 1. Install Ollama & Pull Llama
+
+```bash
+# Install Ollama from https://ollama.com
+# Then pull the Llama 3.2 model:
+ollama pull llama3.2
+```
+
+Ollama runs a local server at `http://localhost:11434` with an OpenAI-compatible API.
+
+### 2. Environment Setup
 
 ```bash
 cp .env.example .env
-# Edit .env with your OpenAI API key
+# Defaults work out of the box with Ollama — no API key needed
 ```
 
-### 2. Run with Docker
+### 3. Run with Docker
 
 ```bash
 docker-compose up --build
@@ -118,7 +128,7 @@ docker-compose up --build
 
 The API will be available at `http://localhost:8000`.
 
-### 3. Run Locally
+### 4. Run Locally
 
 ```bash
 python -m venv .venv
@@ -126,6 +136,8 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 uvicorn api.main:app --reload
 ```
+
+> **Tip:** To use OpenAI instead, set `LLM_BASE_URL=https://api.openai.com/v1`, `LLM_API_KEY=sk-your-key`, and `LLM_MODEL=gpt-4o-mini` in your `.env`.
 
 ## API Endpoints
 
@@ -215,8 +227,9 @@ All configuration is managed via environment variables (see `.env.example`):
 
 | Variable | Default | Description |
 |---|---|---|
-| `OPENAI_API_KEY` | — | OpenAI API key |
-| `OPENAI_MODEL` | `gpt-3.5-turbo` | LLM model name |
+| `LLM_BASE_URL` | `http://localhost:11434/v1` | LLM API base URL (Ollama default) |
+| `LLM_API_KEY` | `ollama` | API key (any value works for Ollama) |
+| `LLM_MODEL` | `llama3.2` | LLM model name |
 | `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformer model |
 | `RERANKER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Cross-encoder model |
 | `RETRIEVAL_TOP_K` | `20` | Initial retrieval count |
@@ -264,7 +277,7 @@ curl -X POST http://localhost:8000/evaluate
 - BM25 index is in-memory (rebuilt from ChromaDB on every restart)
 - Single-node deployment; horizontal scaling would require shared state
 - PDF section detection relies on heuristic heading patterns
-- Evaluation requires OpenAI API access for Ragas metrics
+- Evaluation requires LLM API access for Ragas metrics
 - No user authentication (add middleware for production)
 - Semantic chunking adds ingestion latency due to per-sentence embedding
 

@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import numpy as np
 
-os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_API_KEY", "test-key-not-real")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "./data/test_chroma_emb")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 

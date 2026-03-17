@@ -6,7 +6,9 @@ import os
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 
-os.environ.setdefault("OPENAI_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_API_KEY", "test-key-not-real")
+os.environ.setdefault("LLM_BASE_URL", "http://localhost:11434/v1")
+os.environ.setdefault("LLM_MODEL", "llama3.2")
 os.environ.setdefault("CHROMA_PERSIST_DIR", "./data/test_chroma")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 
